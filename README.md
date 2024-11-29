@@ -48,7 +48,7 @@ Spring Boot 기반의 RESTful API 서버입니다.
   - `s3`: AWS S3 파일 업로드 및 다운로드 처리.
   
 - **폴더 구조**:
-  ```
+ ```
 backend/
 ├── src/main/java/com/example/backendboard/
     ├── controller/  # API 엔드포인트
@@ -59,7 +59,9 @@ backend/
     ├── security/    # Spring Security 설정 및 JWT 처리
     ├── smtp/        # 이메일 인증 및 알림 로직
     └── s3/          # AWS S3 파일 업로드 및 다운로드 처리
-  ```
+ ```
+
+
 
 ---
 
