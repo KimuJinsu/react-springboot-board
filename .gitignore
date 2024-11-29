@@ -1,3 +1,6 @@
+# Ignore .DS_Store in all directories
+.DS_Store
+
 # Ignore all .yaml files
 *.yaml
 *.yml
