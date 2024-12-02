@@ -1,5 +1,5 @@
 
-# 📋 React-SpringBoot-Board-Incomplete
+# 📋 React-SpringBoot-Board-Incomplete.
 
 **React-SpringBoot-Board-Incomplete**는 **Spring Boot**와 **React**를 활용한 게시판 애플리케이션입니다.  
 사용자 계정 관리, 게시글 작성/관리, 파일 업로드, 태그 기반 검색 및 AWS S3 파일 저장소를 포함한 다양한 기능을 제공합니다.  
