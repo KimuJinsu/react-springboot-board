@@ -1,0 +1,75 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.0.1'
+    id 'io.spring.dependency-management' version '1.1.0'
+}
+
+group = 'com.example'
+version = '1.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    enabled = false
+}
+
+bootJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    asciidoctorExt
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+dependencies {
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.projectlombok:lombok:1.18.22'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Database
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.30'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis:2.7.7'
+
+    // QueryDSL
+//    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+//    compileOnly "com.querydsl:querydsl-apt:5.0.0:jakarta"  // annotationProcessor 대신 compileOnly 사용
+//    compileOnly "jakarta.persistence:jakarta.persistence-api:3.1.0"  // jakarta.persistence-api 추가
+
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+
+    // S3
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
+    // SMTP
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '3.2.1'
+}
+
+sourceSets {
+    main.java.srcDirs += 'build/generated/sources/annotationProcessor/java/main'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
