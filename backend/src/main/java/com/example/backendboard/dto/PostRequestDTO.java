@@ -1,21 +1,17 @@
 package com.example.backendboard.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostRequestDTO {
     private String title;
     private String content;
+    private boolean privatePost;
     private boolean blockComment;
-    private boolean isPrivate;
-    private List<String> tags; // 태그 필드 추가
-
+    private List<String> tags;
+    private List<Long> deletedFileIds;
 }

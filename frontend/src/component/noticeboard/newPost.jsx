@@ -109,36 +109,88 @@ const NewPost = ({ idStatus }) => {
   const checkModifiedOrNewpost = async () => {
     const urlStat = window.location.pathname;
     const urlResult = urlStat.split("/");
-    if (urlResult[1] === 'modified') {    // 포스트 수정일 때 데이터를 가져옵니다.
-      const serverResult = await axios({
-          url : `/posts/${parseInt(urlResult[2])}` ,
-          mode : "cors" ,
-          method : "GET"
-      })
-      .catch((e) => { window.location.href = `/viewpost?page=${urlResult[2]}`});
-      
-      if (idStatus !== serverResult.data.data.writer) { // url를 통해 불법적 접근은 제어
-        alert('비정상적인 접근입니다.');
-        window.location.href = '/noticelist';
-      } else {
-        const getTags = serverResult.data.data.tags;
-        const getAttachMent = serverResult.data.data.attachment;
-
-        if(getAttachMent !== null) {
-          const attachResult = getAttachMent.map(item => { return [{
-            name : item.realFileName, id : item.attachmentId
-           }]});
-   
-           setShowFileList(attachResult);
+  
+    if (urlResult[1] === 'modified') { // 게시글 수정일 때
+      try {
+        const serverResult = await axios({
+          url: `/posts/${parseInt(urlResult[2])}`,
+          method: "GET",
+        });
+  
+        const postData = serverResult.data;
+  
+        // 사용자 검증
+        if (idStatus !== postData.writerUsername) {
+          alert('비정상적인 접근입니다.');
+          window.location.href = '/noticelist';
+          return;
         }
-        
-        setPostContent({...postContent , title : serverResult.data.data.title});
-        setPostContent({...postContent , content : serverResult.data.data.content});
-        setPostOption({...postOption , blockComm: serverResult.data.data.blockComment , privates: serverResult.data.data.private});
-        setLabelData(getTags);
+  
+        // 첨부파일 설정 (배열을 확인 후 필터링)
+        const attachResult = (postData.attachments || []).map(item => ({
+          name: item.realFileName,
+          id: item.attachmentId,
+        }));
+  
+        setShowFileList(attachResult);
+  
+        // 게시글 제목과 내용 설정
+        setPostContent({
+          title: postData.title || "",       // 빈 값 방지
+          content: postData.content || ""    // 빈 값 방지
+        });
+  
+        // 옵션 설정
+        setPostOption({
+          blockComm: postData.blockComment || false,
+          privates: postData.privatePost || false,
+        });
+  
+        // 태그 설정
+        setLabelData(postData.tags || []);
+  
+      } catch (e) {
+        console.error("게시글 수정 데이터 불러오기 실패:", e);
+        window.location.href = `/viewpost?page=${urlResult[2]}`;
       }
     }
-  }
+  };
+  
+  
+
+  // const checkModifiedOrNewpost = async () => {
+  //   const urlStat = window.location.pathname;
+  //   const urlResult = urlStat.split("/");
+  //   if (urlResult[1] === 'modified') {    // 포스트 수정일 때 데이터를 가져옵니다.
+  //     const serverResult = await axios({
+  //         url : `/posts/${parseInt(urlResult[2])}` ,
+  //         mode : "cors" ,
+  //         method : "GET"
+  //     })
+  //     .catch((e) => { window.location.href = `/viewpost?page=${urlResult[2]}`});
+      
+  //     if (idStatus !== serverResult.data.data.writer) { // url를 통해 불법적 접근은 제어
+  //       alert('비정상적인 접근입니다.');
+  //       window.location.href = '/noticelist';
+  //     } else {
+  //       const getTags = serverResult.data.data.tags;
+  //       const getAttachMent = serverResult.data.data.attachment;
+
+  //       if(getAttachMent !== null) {
+  //         const attachResult = getAttachMent.map(item => { return [{
+  //           name : item.realFileName, id : item.attachmentId
+  //          }]});
+   
+  //          setShowFileList(attachResult);
+  //       }
+        
+  //       setPostContent({...postContent , title : serverResult.data.data.title});
+  //       setPostContent({...postContent , content : serverResult.data.data.content});
+  //       setPostOption({...postOption , blockComm: serverResult.data.data.blockComment , privates: serverResult.data.data.private});
+  //       setLabelData(getTags);
+  //     }
+  //   }
+  // }
 
   const newPost = async () => { // 새로운 글 작성 모드
     const urlStat = window.location.pathname;
@@ -201,7 +253,7 @@ const NewPost = ({ idStatus }) => {
         method : "PUT" ,
         url : `/posts/${urlResult[2]}`,
         data : requestForm ,
-        headers: {'Content-Type': 'multipart/form-data'}
+        headers: {}
       })
       .then((response) => { 
         if(response.data.data == "4") {

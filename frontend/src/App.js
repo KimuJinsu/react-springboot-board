@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import AdminPage from './component/admin/admin';
 import AdminLogin from './component/admin/adminLogin';
 
+
 function App() {
 
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path='*' element={<NoticeFrame />} />
+          
         </Routes>
       </div>
     </BrowserRouter>

@@ -1,17 +1,15 @@
 package com.example.backendboard.controller;
 
+import com.example.backendboard.dto.CountResponseDTO;
 import com.example.backendboard.dto.PostRequestDTO;
 import com.example.backendboard.dto.PostResponseDTO;
 import com.example.backendboard.service.PostService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -21,81 +19,121 @@ public class PostController {
 
     private final PostService postService;
 
-    // 게시글 생성
     @PostMapping
-    public ResponseEntity<Long> createPost(
-            @RequestPart("postRequest") PostRequestDTO postRequest,
-            @RequestPart(value = "multipartFiles", required = false) List<MultipartFile> multipartFiles) {
-        // 인증 정보 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
-            throw new IllegalArgumentException("로그인 정보가 없습니다.");
+    public ResponseEntity<?> createPost(@RequestPart("postRequest") PostRequestDTO postRequest,
+                                        @RequestPart(value = "multipartFiles", required = false) List<MultipartFile> files,
+                                        Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
 
-        String writerUsername = authentication.getName(); // 인증된 사용자 이름 가져오기
-        Long postId = postService.createPost(postRequest, multipartFiles, writerUsername);
+        String username = authentication.getName();
+        Long postId = postService.createPost(postRequest, files, username);
         return ResponseEntity.ok(postId);
     }
 
-    /**
-     * 게시글 목록 조회
-     */
+    @PutMapping("/{postId}")
+    public ResponseEntity<?> updatePost(@PathVariable Long postId,
+                                        @RequestPart("postRequest") PostRequestDTO postRequest,
+                                        @RequestPart(value = "multipartFiles", required = false) List<MultipartFile> files,
+                                        Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        String username = authentication.getName();
+        System.out.println("인증된 사용자: " + authentication.getName()); // 사용자 정보 확인 로그
+
+        try {
+            // 요청 데이터 확인 (디버깅용)
+            System.out.println("Post ID: " + postId);
+            System.out.println("Request: " + postRequest);
+
+            postService.updatePost(postId, postRequest, files, username);
+            return ResponseEntity.ok("게시글이 수정되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+
+    // 게시글 목록 조회
     @GetMapping
-    public ResponseEntity<List<PostResponseDTO>> getPosts(
-            @RequestParam("page") int page,
-            @RequestParam("size") int size) {
+    public ResponseEntity<List<PostResponseDTO>> getPosts(@RequestParam int page, @RequestParam int size) {
         List<PostResponseDTO> posts = postService.getPosts(page, size);
         return ResponseEntity.ok(posts);
     }
 
-    /**
-     * 게시글 총 개수 조회
-     */
-    @GetMapping("/count")
-    public ResponseEntity<Long> getPostCount(@RequestParam("type") String type) {
-        Long postCount = postService.getPostCount(type);
-        return ResponseEntity.ok(postCount);
-    }
-
-    @PutMapping("/{postId}")
-    public ResponseEntity<Void> updatePost(
-            @PathVariable Long postId,
-            @RequestPart("postRequest") PostRequestDTO postRequest,
-            @RequestPart(value = "multipartFiles", required = false) List<MultipartFile> multipartFiles,
-            Authentication authentication
-    ) {
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
-            throw new IllegalArgumentException("로그인 정보가 없습니다.");
-        }
-
-        String writerUsername = authentication.getName();
-        postService.updatePost(postId, postRequest, multipartFiles, writerUsername);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/{postId}")
-    public ResponseEntity<PostResponseDTO> getPost(@PathVariable Long postId) {
-        PostResponseDTO post = postService.getPost(postId);
-        return ResponseEntity.ok(post);
-    }
-
-    @GetMapping("/search/{data}")
-    public ResponseEntity<List<PostResponseDTO>> searchPosts(
-            @PathVariable String data,
-            @RequestParam("page") int page,
-            @RequestParam("size") int size) {
-        List<PostResponseDTO> posts = postService.searchPosts(data, page, size);
+    // 키워드 검색
+    @GetMapping("/search/{keyword}")
+    public ResponseEntity<List<PostResponseDTO>> searchPosts(@PathVariable String keyword,
+                                                             @RequestParam int page,
+                                                             @RequestParam int size) {
+        List<PostResponseDTO> posts = postService.searchPosts(keyword, page, size);
         return ResponseEntity.ok(posts);
     }
 
+    // 태그 검색
     @GetMapping("/search/tags/{tag}")
-    public ResponseEntity<List<PostResponseDTO>> searchPostsByTag(
-            @PathVariable String tag,
-            @RequestParam("page") int page,
-            @RequestParam("size") int size) {
+    public ResponseEntity<List<PostResponseDTO>> searchByTag(@PathVariable String tag,
+                                                             @RequestParam int page,
+                                                             @RequestParam int size) {
         List<PostResponseDTO> posts = postService.searchPostsByTag(tag, page, size);
         return ResponseEntity.ok(posts);
     }
-}
 
+    // 게시글 개수 조회
+    @GetMapping("/count")
+    public ResponseEntity<CountResponseDTO> getPostCount(@RequestParam String type,
+                                                         @RequestParam(required = false) String data) {
+        Long count = postService.getPostCount(type, data);
+        return ResponseEntity.ok(new CountResponseDTO(count));
+    }
+
+    @PatchMapping("/views/{id}")
+    public ResponseEntity<?> increaseViews(@PathVariable Long id) {
+        postService.increaseViewCount(id);
+        return ResponseEntity.ok("조회수가 증가했습니다.");
+    }
+
+    @PatchMapping("/likes/{id}")
+    public ResponseEntity<?> likePost(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+        String username = authentication.getName();
+        try {
+            postService.likePost(id, username);
+            return ResponseEntity.ok("좋아요 처리가 완료되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPostById(@PathVariable Long id, Authentication authentication) {
+        String currentUsername = authentication != null && authentication.isAuthenticated() ? authentication.getName() : null;
+        try {
+            PostResponseDTO post = postService.getPost(id, currentUsername);
+            return ResponseEntity.ok(post);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        String currentUsername = authentication.getName();
+        try {
+            postService.deletePost(id, currentUsername);
+            return ResponseEntity.ok("게시글이 삭제되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+}

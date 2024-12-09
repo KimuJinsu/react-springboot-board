@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/mail/**",
                                 "/logins",
                                 "/user/logout",
-                                "/posts/**").permitAll() // 인증 없이 허용
+                                "/posts/**",
+                                "/comments/**").permitAll() // 인증 없이 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 );
         return http.build();
@@ -51,7 +52,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // React 앱 도메인
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE")); // 허용할 HTTP 메서드
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH")); // 허용할 HTTP 메서드
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // 허용할 헤더
         configuration.setAllowCredentials(true); // 인증 정보 포함 허용
 

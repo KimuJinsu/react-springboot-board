@@ -1,14 +1,17 @@
 package com.example.backendboard.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "users")
 public class User {
 
@@ -28,7 +31,10 @@ public class User {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
-
     @Column(nullable = false)
     private boolean verified = false;
+
+    @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<Post> posts = new ArrayList<>(); // 작성한 게시글들
 }
